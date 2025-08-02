@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>-يوسف الصيفي لعبة الهروب من الشرطي</title>
+    <title>لعبة الهروب من الشرطي</title>
     <style>
         * {
             margin: 0;
@@ -134,27 +134,65 @@
 
         .clothes-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
             margin: 20px 0;
-            max-width: 300px;
+            max-width: 400px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
         }
 
         .clothes-btn {
             background: #9C27B0;
-            font-size: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            min-height: 60px;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 8px;
+            min-height: 50px;
+            min-width: 50px;
+            position: relative;
+            transition: all 0.3s ease;
         }
 
         .clothes-btn:hover, .clothes-btn:active {
             background: #7B1FA2;
+            transform: scale(1.05);
         }
 
         .clothes-btn.selected {
             background: #FF5722;
             box-shadow: 0 0 15px rgba(255, 87, 34, 0.5);
+            transform: scale(1.1);
+        }
+
+        .clothes-btn.locked {
+            background: #424242;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .clothes-btn.locked:hover {
+            background: #424242;
+            transform: none;
+        }
+
+        .level-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #FF9800;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
         }
 
         #instructions {
@@ -261,20 +299,21 @@
             
             <div id="instructions">
                 <p>🎮 استخدم الأزرار أو اللمس للحركة</p>
-                <p>⬆️ اقفز فوق العقبات</p>
-                <p>⬅️➡️ تحرك يميناً ويساراً</p>
-                <p>💰 اجمع الأموال واتجنب العقبات</p>
-                <p>👮 اهرب من الشرطي!</p>
-                <p>🎯 كل 100 نقطة = مستوى جديد وملابس جديدة!</p>
+                <p>⬆️ اقفز فوق القطارات والسيارات</p>
+                <p>⬅️➡️ تحرك يميناً ويساراً بين المسارات</p>
+                <p>💰 اجمع الأموال واتجنب الاصطدام</p>
+                <p>👮‍♂️ اهرب من الشرطي!</p>
+                <p>🚂 اقفز فوق القطارات للحصول على نقاط إضافية!</p>
+                <p>👕 120 زي مختلف في 20 مستوى!</p>
             </div>
 
             <div style="margin: 15px;">
                 <h3>اختر شخصيتك:</h3>
                 <div style="display: flex; flex-wrap: wrap; justify-content: center;">
-                    <button class="character-btn selected" data-character="boy">👦 الولد</button>
-                    <button class="character-btn" data-character="girl">👧 الأخت</button>
-                    <button class="character-btn" data-character="father">👨 الأب</button>
-                    <button class="character-btn" data-character="mother">👩 الأم</button>
+                    <button class="character-btn selected" data-character="boy">🧑‍🦱 الولد</button>
+                    <button class="character-btn" data-character="girl">👩‍🦰 الأخت</button>
+                    <button class="character-btn" data-character="father">👨‍🦲 الأب</button>
+                    <button class="character-btn" data-character="mother">👩‍🦳 الأم</button>
                 </div>
             </div>
 
@@ -289,6 +328,15 @@
             
             <div class="clothes-grid" id="clothesGrid">
                 <!-- سيتم ملؤها بـ JavaScript -->
+            </div>
+            
+            <div style="margin: 15px; font-size: 14px; text-align: center;">
+                <p>🎯 كل 100 نقطة = مستوى جديد</p>
+                <p>📈 20 مستوى مع 120 زي مختلف!</p>
+                <p>🔓 المستوى 1-5: ملابس عادية</p>
+                <p>⚡ المستوى 6-10: شخصيات خارقة</p>
+                <p>🌟 المستوى 11-15: أزياء مميزة</p>
+                <p>🏆 المستوى 16-20: أزياء أسطورية</p>
             </div>
             
             <button onclick="backToStart()">العودة للقائمة الرئيسية</button>
@@ -329,45 +377,84 @@
         let isMoving = false;
         let specialEffect = false;
 
-        // شخصيات اللعبة
+        // شخصيات اللعبة - الجسد كامل مع اليدين والقدمين
         const characters = {
-            boy: '👦',
-            girl: '👧', 
-            father: '👨',
-            mother: '👩'
+            boy: {
+                body: '👤',
+                running: ['🏃‍♂️', '🏃‍♂️'],
+                jumping: '🤸‍♂️',
+                landing: '🤾‍♂️'
+            },
+            girl: {
+                body: '👤',
+                running: ['🏃‍♀️', '🏃‍♀️'],
+                jumping: '🤸‍♀️',
+                landing: '🤾‍♀️'
+            },
+            father: {
+                body: '👤',
+                running: ['🏃‍♂️', '🏃‍♂️'],
+                jumping: '🤸‍♂️',
+                landing: '🤾‍♂️'
+            },
+            mother: {
+                body: '👤',
+                running: ['🏃‍♀️', '🏃‍♀️'],
+                jumping: '🤸‍♀️',
+                landing: '🤾‍♀️'
+            }
         };
 
-        // ملابس متاحة حسب المستوى
+        // ملابس متاحة حسب المستوى - ملابس حقيقية للجسم
         const clothesByLevel = {
-            1: ['👕', '👔', '🦺'],
-            2: ['👗', '👘', '🥼'],
-            3: ['🧥', '👚', '🥻'],
-            4: ['🦸‍♂️', '🦸‍♀️', '🧙‍♂️'],
-            5: ['👑', '🎩', '🧢'],
-            6: ['🤴', '👸', '🧞‍♂️']
+            1: ['👕', '👔', '🦺', '👶', '🧒'],
+            2: ['👗', '👘', '🥼', '👯‍♀️', '💃', '🕺'],
+            3: ['🧥', '👚', '🥻', '🧦', '👢', '👠'],
+            4: ['🦸‍♂️', '🦸‍♀️', '🧙‍♂️', '🧙‍♀️', '🦹‍♂️', '🦹‍♀️'],
+            5: ['👮‍♂️', '👮‍♀️', '👨‍⚕️', '👩‍⚕️', '👨‍🍳', '👩‍🍳'],
+            6: ['👨‍💼', '👩‍💼', '👨‍🔧', '👩‍🔧', '👨‍🚀', '👩‍🚀'],
+            7: ['🧛‍♂️', '🧛‍♀️', '🧟‍♂️', '🧟‍♀️', '👺', '👹'],
+            8: ['🧚‍♂️', '🧚‍♀️', '🧜‍♂️', '🧜‍♀️', '🧝‍♂️', '🧝‍♀️'],
+            9: ['👸', '🤴', '👰‍♀️', '👰‍♂️', '🤵‍♂️', '🤵‍♀️'],
+            10: ['🎅', '🤶', '🧑‍🎄', '🎪', '🤹‍♂️', '🤹‍♀️'],
+            11: ['👨‍🎨', '👩‍🎨', '👨‍🎤', '👩‍🎤', '👨‍🎓', '👩‍🎓'],
+            12: ['👨‍💻', '👩‍💻', '👨‍🔬', '👩‍🔬', '👨‍🏫', '👩‍🏫'],
+            13: ['👨‍🌾', '👩‍🌾', '👨‍🍳', '👩‍🍳', '👨‍⚖️', '👩‍⚖️'],
+            14: ['👨‍✈️', '👩‍✈️', '👨‍🚒', '👩‍🚒', '👨‍⚕️', '👩‍⚕️'],
+            15: ['👨‍🎭', '👩‍🎭', '🤖', '👽', '👻', '💀'],
+            16: ['🦄', '🐉', '🦋', '🌟', '⭐', '✨'],
+            17: ['🌸', '🌺', '🌻', '🌹', '🌷', '🌼'],
+            18: ['🦁', '🐯', '🐻', '🐼', '🐨', '🐵'],
+            19: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐'],
+            20: ['🎊', '🎉', '🎈', '🎀', '🎁', '💝']
         };
 
         // اللاعب
         const player = {
             x: canvas.width / 2,
             y: canvas.height - 150,
-            width: 50,
-            height: 50,
+            width: 60,
+            height: 80,
             velocityY: 0,
             jumping: false,
+            landing: false,
             lane: 1,
-            character: '👦',
-            clothes: '👕',
-            animating: false
+            character: characters.boy,
+            currentClothes: '👕',
+            animating: false,
+            jumpHeight: 0,
+            runningFrame: 0,
+            landingTimer: 0
         };
 
         // الشرطي
         const police = {
             x: canvas.width / 2,
             y: canvas.height - 200,
-            width: 50,
-            height: 50,
-            character: '👮'
+            width: 60,
+            height: 80,
+            character: '👮‍♂️',
+            runningFrame: 0
         };
 
         // العقبات والأموال
@@ -423,11 +510,13 @@
         }
 
         function jump() {
-            if (!player.jumping) {
-                player.velocityY = -18;
+            if (!player.jumping && !player.landing) {
+                player.velocityY = -16; // قفزة أقل ارتفاعاً للسهولة
                 player.jumping = true;
+                player.landing = false;
                 player.animating = true;
-                setTimeout(() => { player.animating = false; }, 500);
+                player.jumpHeight = 0;
+                setTimeout(() => { player.animating = false; }, 600);
             }
         }
 
@@ -510,24 +599,55 @@
             const grid = document.getElementById('clothesGrid');
             grid.innerHTML = '';
             
-            for (let lvl = 1; lvl <= level; lvl++) {
+            // إضافة عداد للملابس المتاحة
+            let availableCount = 0;
+            let totalCount = 0;
+            
+            for (let lvl = 1; lvl <= 20; lvl++) {
                 if (clothesByLevel[lvl]) {
                     clothesByLevel[lvl].forEach(clothes => {
+                        totalCount++;
                         const btn = document.createElement('button');
                         btn.className = 'clothes-btn';
-                        btn.textContent = clothes;
-                        if (clothes === selectedClothes) {
-                            btn.classList.add('selected');
+                        btn.innerHTML = clothes;
+                        
+                        // إضافة مؤشر المستوى
+                        const levelIndicator = document.createElement('div');
+                        levelIndicator.className = 'level-indicator';
+                        levelIndicator.textContent = lvl;
+                        btn.appendChild(levelIndicator);
+                        
+                        if (lvl <= level) {
+                            // متاح
+                            availableCount++;
+                            if (clothes === selectedClothes) {
+                                btn.classList.add('selected');
+                            }
+                            btn.addEventListener('click', () => {
+                                document.querySelectorAll('.clothes-btn').forEach(b => b.classList.remove('selected'));
+                                btn.classList.add('selected');
+                                selectedClothes = clothes;
+                            });
+                        } else {
+                            // مقفل
+                            btn.classList.add('locked');
+                            btn.title = `يفتح في المستوى ${lvl}`;
                         }
-                        btn.addEventListener('click', () => {
-                            document.querySelectorAll('.clothes-btn').forEach(b => b.classList.remove('selected'));
-                            btn.classList.add('selected');
-                            selectedClothes = clothes;
-                        });
+                        
                         grid.appendChild(btn);
                     });
                 }
             }
+            
+            // تحديث عداد الملابس
+            const counterDiv = document.createElement('div');
+            counterDiv.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-top: 10px;';
+            counterDiv.innerHTML = `
+                <div style="font-size: 16px; font-weight: bold;">📊 الملابس المتاحة</div>
+                <div style="font-size: 14px; margin-top: 5px;">${availableCount} من ${totalCount} زي متاح</div>
+                <div style="font-size: 12px; color: #FFD700; margin-top: 3px;">🔓 ${Math.max(0, (level * 6) - availableCount)} زي جديد في المستوى القادم</div>
+            `;
+            grid.appendChild(counterDiv);
         }
 
         function startGame() {
@@ -541,12 +661,15 @@
             
             // إعداد اللاعب
             player.character = characters[selectedCharacter];
-            player.clothes = selectedClothes;
+            player.currentClothes = selectedClothes;
             updatePlayerPosition();
             player.y = canvas.height - 150;
             player.velocityY = 0;
             player.jumping = false;
+            player.landing = false;
             player.lane = 1;
+            player.runningFrame = 0;
+            player.landingTimer = 0;
 
             // إعادة تعيين المصفوفات
             obstacles = [];
@@ -594,35 +717,180 @@
         }
 
         function updatePlayer() {
-            // فيزياء القفز المحسنة
+            // فيزياء القفز المحسنة والسهلة
             if (player.jumping) {
                 player.y += player.velocityY;
-                player.velocityY += 0.9; // جاذبية قوية للهاتف
+                player.velocityY += 0.8; // جاذبية أقل للسهولة
+                player.jumpHeight = Math.abs(player.velocityY);
 
                 if (player.y >= canvas.height - 150) {
                     player.y = canvas.height - 150;
                     player.jumping = false;
+                    player.landing = true;
+                    player.landingTimer = 20; // مدة حركة الهبوط
                     player.velocityY = 0;
+                    player.jumpHeight = 0;
                 }
+            }
+
+            // حركة الهبوط
+            if (player.landing) {
+                player.landingTimer--;
+                if (player.landingTimer <= 0) {
+                    player.landing = false;
+                }
+            }
+
+            // تحديث إطار الحركة للجري
+            if (!player.jumping && !player.landing) {
+                player.runningFrame = (player.runningFrame + 0.2) % 2;
             }
         }
 
         function createObstacle() {
-            if (Math.random() < 0.025 + (level * 0.005)) {
+            // تدرج الصعوبة حسب المستوى
+            let spawnRate = 0.015; // معدل أساسي منخفض
+            
+            if (level <= 3) {
+                spawnRate = 0.012; // سهل جداً
+            } else if (level <= 6) {
+                spawnRate = 0.018; // سهل
+            } else if (level <= 10) {
+                spawnRate = 0.025; // متوسط
+            } else if (level <= 15) {
+                spawnRate = 0.032; // صعب
+            } else {
+                spawnRate = 0.040; // صعب جداً
+            }
+            
+            if (Math.random() < spawnRate) {
                 const lane = Math.floor(Math.random() * 3);
                 const laneWidth = canvas.width / 3;
+                
+                // نوع العقبة حسب المستوى
+                let obstacle;
+                
+                if (level <= 3) {
+                    // المستويات الأولى: سيارات صغيرة فقط
+                    const easyCars = ['🚗', '🚕', '🚙'];
+                    obstacle = {
+                        x: laneWidth * lane + (laneWidth / 2) - 25,
+                        y: -60,
+                        width: 50,
+                        height: 50,
+                        type: easyCars[Math.floor(Math.random() * easyCars.length)],
+                        category: 'vehicle',
+                        canJumpOver: true
+                    };
+                } else if (level <= 6) {
+                    // مستويات متوسطة: سيارات متنوعة
+                    const mediumCars = ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️'];
+                    obstacle = {
+                        x: laneWidth * lane + (laneWidth / 2) - 30,
+                        y: -65,
+                        width: 60,
+                        height: 55,
+                        type: mediumCars[Math.floor(Math.random() * mediumCars.length)],
+                        category: 'vehicle',
+                        canJumpOver: true
+                    };
+                } else if (level <= 10) {
+                    // مستويات متقدمة: قطارات وسيارات
+                    const obstacleType = Math.random();
+                    if (obstacleType < 0.6) {
+                        const allCars = ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒'];
+                        obstacle = {
+                            x: laneWidth * lane + (laneWidth / 2) - 30,
+                            y: -70,
+                            width: 60,
+                            height: 60,
+                            type: allCars[Math.floor(Math.random() * allCars.length)],
+                            category: 'vehicle',
+                            canJumpOver: true
+                        };
+                    } else {
+                        const smallTrains = ['🚊', '🚋', '🚇'];
+                        obstacle = {
+                            x: laneWidth * lane + (laneWidth / 2) - 35,
+                            y: -75,
+                            width: 70,
+                            height: 65,
+                            type: smallTrains[Math.floor(Math.random() * smallTrains.length)],
+                            category: 'train',
+                            canJumpOver: true
+                        };
+                    }
+                } else {
+                    // مستويات صعبة: جميع الأنواع + حفر
+                    const obstacleType = Math.random();
+                    if (obstacleType < 0.4) {
+                        const allCars = ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻'];
+                        obstacle = {
+                            x: laneWidth * lane + (laneWidth / 2) - 30,
+                            y: -70,
+                            width: 60,
+                            height: 60,
+                            type: allCars[Math.floor(Math.random() * allCars.length)],
+                            category: 'vehicle',
+                            canJumpOver: true
+                        };
+                    } else if (obstacleType < 0.8) {
+                        const allTrains = ['🚂', '🚆', '🚊', '🚋', '🚄', '🚅', '🚇', '🚈'];
+                        obstacle = {
+                            x: laneWidth * lane + (laneWidth / 2) - 35,
+                            y: -80,
+                            width: 70,
+                            height: 70,
+                            type: allTrains[Math.floor(Math.random() * allTrains.length)],
+                            category: 'train',
+                            canJumpOver: true
+                        };
+                    } else {
+                        const roadHazards = ['🕳️', '⚡', '💥'];
+                        obstacle = {
+                            x: laneWidth * lane + (laneWidth / 2) - 25,
+                            y: -50,
+                            width: 50,
+                            height: 30,
+                            type: roadHazards[Math.floor(Math.random() * roadHazards.length)],
+                            category: 'road',
+                            canJumpOver: true,
+                            onGround: true
+                        };
+                    }
+                }
+                
+                obstacles.push(obstacle);
+            }
+        }', '🚜'];
+                const selectedType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                
                 obstacles.push({
-                    x: laneWidth * lane + (laneWidth / 2) - 25,
-                    y: -60,
-                    width: 50,
-                    height: 50,
-                    type: Math.random() < 0.5 ? '🚧' : '🚗'
+                    x: laneWidth * lane + (laneWidth / 2) - 30,
+                    y: -70,
+                    width: 60,
+                    height: 60,
+                    type: selectedType,
+                    canJumpOver: true
                 });
             }
         }
 
         function createMoney() {
-            if (Math.random() < 0.02) {
+            // زيادة معدل ظهور الأموال للمساعدة
+            let coinRate = 0.025; // معدل أساسي عالي
+            
+            if (level <= 3) {
+                coinRate = 0.035; // كثير من الأموال في البداية
+            } else if (level <= 6) {
+                coinRate = 0.030;
+            } else if (level <= 10) {
+                coinRate = 0.025;
+            } else {
+                coinRate = 0.020;
+            }
+            
+            if (Math.random() < coinRate) {
                 const lane = Math.floor(Math.random() * 3);
                 const laneWidth = canvas.width / 3;
                 moneyCoins.push({
@@ -683,23 +951,58 @@
         }
 
         function checkCollisions() {
-            // التصادم مع العقبات
-            obstacles.forEach(obstacle => {
-                if (player.x < obstacle.x + obstacle.width &&
-                    player.x + player.width > obstacle.x &&
-                    player.y < obstacle.y + obstacle.height &&
-                    player.y + player.height > obstacle.y) {
-                    gameOver();
+            // التصادم مع العقبات - نظام أكثر تسامحاً
+            obstacles.forEach((obstacle, index) => {
+                // تقليل منطقة التصادم للسهولة
+                const playerHitBox = {
+                    x: player.x + 10,
+                    y: player.y + 10,
+                    width: player.width - 20,
+                    height: player.height - 20
+                };
+                
+                const obstacleHitBox = {
+                    x: obstacle.x + 5,
+                    y: obstacle.y + 5,
+                    width: obstacle.width - 10,
+                    height: obstacle.height - 10
+                };
+                
+                if (playerHitBox.x < obstacleHitBox.x + obstacleHitBox.width &&
+                    playerHitBox.x + playerHitBox.width > obstacleHitBox.x &&
+                    playerHitBox.y < obstacleHitBox.y + obstacleHitBox.height &&
+                    playerHitBox.y + playerHitBox.height > obstacleHitBox.y) {
+                    
+                    // إذا كان اللاعب يقفز، يمكنه تجاوز العقبة بسهولة أكبر
+                    if (player.jumping && playerHitBox.y + playerHitBox.height < obstacleHitBox.y + 30) {
+                        // نجح في القفز فوق العقبة
+                        score += 20; // نقاط إضافية
+                        obstacles.splice(index, 1); // إزالة العقبة
+                        createParticle(obstacle.x, obstacle.y);
+                    } else if (!player.jumping && obstacle.onGround) {
+                        // تصادم مع حفرة في الأرض
+                        gameOver();
+                    } else if (!player.jumping) {
+                        // تصادم عادي
+                        gameOver();
+                    }
                 }
             });
 
-            // جمع الأموال
+            // جمع الأموال - منطقة أكبر للسهولة
             for (let i = moneyCoins.length - 1; i >= 0; i--) {
                 const coin = moneyCoins[i];
-                if (player.x < coin.x + coin.width &&
-                    player.x + player.width > coin.x &&
-                    player.y < coin.y + coin.height &&
-                    player.y + player.height > coin.y) {
+                const coinHitBox = {
+                    x: coin.x - 10,
+                    y: coin.y - 10,
+                    width: coin.width + 20,
+                    height: coin.height + 20
+                };
+                
+                if (player.x < coinHitBox.x + coinHitBox.width &&
+                    player.x + player.width > coinHitBox.x &&
+                    player.y < coinHitBox.y + coinHitBox.height &&
+                    player.y + player.height > coinHitBox.y) {
                     moneyCoins.splice(i, 1);
                     coins += 15;
                     score += 10;
@@ -730,8 +1033,8 @@
                 ctx.stroke();
             }
 
-            // رسم اللاعب مع التأثيرات
-            ctx.font = '50px Arial';
+            // رسم اللاعب مع الحركات والملابس
+            ctx.font = '60px Arial';
             ctx.textAlign = 'center';
             
             if (specialEffect) {
@@ -739,19 +1042,68 @@
                 ctx.shadowBlur = 20;
             }
             
-            // رسم الملابس أولاً
-            ctx.fillText(player.clothes, player.x + player.width/2, player.y + 35);
-            // ثم الشخصية
-            ctx.fillText(player.character, player.x + player.width/2, player.y + 40);
+            // اختيار الحركة المناسبة
+            let currentSprite;
+            if (player.jumping) {
+                currentSprite = player.character.jumping;
+            } else if (player.landing) {
+                currentSprite = player.character.landing;
+            } else {
+                // حركة الجري
+                const runIndex = Math.floor(player.runningFrame);
+                currentSprite = player.character.running[runIndex];
+            }
             
+            // رسم الشخصية مع تأثيرات الحركة
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            
+            if (player.jumping) {
+                // دوران خفيف أثناء القفز
+                ctx.rotate(Math.sin(player.jumpHeight * 0.05) * 0.1);
+            } else if (player.landing) {
+                // حركة الهبوط - انحناء للأمام
+                ctx.scale(1.1, 0.9);
+            } else if (player.animating) {
+                // حركة أثناء التنقل بين المسارات
+                ctx.scale(1.05, 0.95);
+            }
+            
+            // رسم الشخصية (الملابس مدمجة في الشخصية)
+            if (player.currentClothes.includes('👮') || player.currentClothes.includes('👨‍') || player.currentClothes.includes('👩‍')) {
+                // إذا كانت الملابس شخصية كاملة، ارسمها بدلاً من الشخصية الأساسية
+                ctx.fillText(player.currentClothes, 0, 0);
+            } else {
+                // ارسم الشخصية الأساسية
+                ctx.fillText(currentSprite, 0, 0);
+            }
+            
+            ctx.restore();
             ctx.shadowBlur = 0;
 
-            // رسم الشرطي
-            ctx.fillText(police.character, player.x + player.width/2, player.y + 90);
+            // رسم الشرطي مع حركة الجري
+            ctx.font = '50px Arial';
+            police.runningFrame = (police.runningFrame + 0.15) % 2;
+            const policeSprite = Math.floor(police.runningFrame) === 0 ? '👮‍♂️' : '🏃‍♂️';
+            ctx.fillText(policeSprite, player.x + player.width/2, player.y + 100);
 
-            // رسم العقبات
+            // رسم العقبات - قطارات وسيارات
+            ctx.font = '50px Arial';
             obstacles.forEach(obstacle => {
-                ctx.fillText(obstacle.type, obstacle.x + obstacle.width/2, obstacle.y + 40);
+                ctx.save();
+                ctx.translate(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2);
+                
+                // تأثير حركة خفيف للمركبات
+                if (obstacle.type.includes('🚂') || obstacle.type.includes('🚆') || obstacle.type.includes('🚄')) {
+                    // حركة اهتزاز للقطارات
+                    ctx.translate(Math.sin(animationFrame * 0.3) * 1, 0);
+                } else {
+                    // حركة خفيفة للسيارات
+                    ctx.translate(Math.sin(animationFrame * 0.2) * 0.5, 0);
+                }
+                
+                ctx.fillText(obstacle.type, 0, 15);
+                ctx.restore();
             });
 
             // رسم الأموال مع تأثير الدوران
@@ -814,3 +1166,4 @@
     </script>
 </body>
 </html>
+
